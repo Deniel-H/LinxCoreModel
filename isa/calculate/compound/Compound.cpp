@@ -13,7 +13,8 @@ static bool CalcInstCSEL(MInst &inst)
     uint64_t srcP = inst.srcs[SRC0_IDX]->data;
     uint64_t srcL = inst.srcs[SRC1_IDX]->data;
     uint64_t srcR = inst.srcs[SRC2_IDX]->data;
-    if (srcP == 0) {
+    // SAIL v0.56 exec_csel/exec_v_csel: Dest = (SrcP != 0) ? SrcL : SrcR.
+    if (srcP != 0) {
         inst.dsts[DST0_IDX]->data = srcL;
     } else {
         inst.dsts[DST0_IDX]->data = srcR;
@@ -30,7 +31,8 @@ static bool CalcInstPSEL(MInst &inst)
     bool srcP = GetBit(inst.srcs[SRC0_IDX]->data, inst.laneID);
     uint64_t srcL = inst.srcs[SRC1_IDX]->data;
     uint64_t srcR = inst.srcs[SRC2_IDX]->data;
-    if (!srcP) {
+    // SAIL v0.56 exec_v_psel: take_l = (SrcP != 0); Dest = take_l ? SrcL : SrcR.
+    if (srcP) {
         inst.dsts[DST0_IDX]->data = srcL;
     } else {
         inst.dsts[DST0_IDX]->data = srcR;
