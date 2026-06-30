@@ -293,6 +293,11 @@ public:
                      std::pair<size_t, size_t> validMatrix,
                      DataType dataType,
                      DataType dstType);
+    void ExecuteTHISTOGRAM(BlockFuncPtr block,
+                           std::pair<size_t, size_t> validMatrix,
+                           DataType srcType,
+                           DataType dstType,
+                           uint32_t byteId);
 
     MInstFuncPtr InitCTInst(BlockFuncPtr block, Opcode op, EncodeLen len = EncodeLen::ENL_W);
     void ExecuteCTInst(MInstFuncPtr inst, BlockFuncPtr &block);

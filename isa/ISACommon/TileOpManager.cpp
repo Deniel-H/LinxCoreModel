@@ -93,6 +93,7 @@ void TileOpManager::RegisterTileOpcode()
     RegisterTileOpInfo(TileOp::TCOLEXPANDEXPDIF, "TCOLEXPANDEXPDIF", MachineType::VECLITE);
     RegisterTileOpInfo(TileOp::ESAVE, "ESAVE", MachineType::VECLITE);
     RegisterTileOpInfo(TileOp::ERCOV, "ERCOV", MachineType::VECLITE);
+    RegisterTileOpInfo(TileOp::THISTOGRAM, "THISTOGRAM", MachineType::VECLITE);
     /* TMA */
     RegisterTileOpInfo(TileOp::TLOAD, "TLOAD", MachineType::TMA);
     RegisterTileOpInfo(TileOp::TSTORE, "TSTORE", MachineType::TMA);

@@ -529,6 +529,118 @@ void SoftCore::ExecuteTCOLEXPANDMUL(BlockFuncPtr block,
     }
 }
 
+void SoftCore::ExecuteTHISTOGRAM(BlockFuncPtr block,
+                                  std::pair<size_t, size_t> validMatrix,
+                                  DataType srcType,
+                                  DataType dstType,
+                                  uint32_t byteId)
+{
+    size_t validRow = validMatrix.first;
+    size_t validCol = validMatrix.second;
+
+    // Load source tile (SrcTile)
+    std::vector<uint64_t> src = LoadFromTileRegister(srcType, validRow, validCol,
+                                                       block->srcTile[0]->baseAddr,
+                                                       FractalType::RD, block->threadId);
+
+    // Load idx tile (IdxTile) for filtering.
+    // For u16+Byte1 / u32+Byte3: no filter needed.
+    // For u16+Byte0: idx[row][0] — per-row filter (need validRow elements).
+    // For u32: idx[0..2][0] — up to 3 prefix filter values.
+    bool needIdx = true;
+    if (srcType == DataType::UINT16 && byteId == 1) {
+        needIdx = false; // u16 Byte1: no filter
+    } else if (srcType == DataType::UINT32 && byteId == 3) {
+        needIdx = false; // u32 Byte3: no filter
+    }
+    std::vector<uint64_t> idxFlat;
+    if (needIdx && block->srcTile.size() > 1 && block->srcTile[1] != nullptr) {
+        uint32_t idxLoadRows = (srcType == DataType::UINT16) ? validRow : 3;
+        idxFlat = LoadFromTileRegister(DataType::UINT32, idxLoadRows, 1,
+                                        block->srcTile[1]->baseAddr,
+                                        FractalType::RD, block->threadId);
+    }
+
+    // Pre-extract idx filter bytes for fast access
+    auto getIdxByte = [&](uint32_t r, uint32_t c) -> uint32_t {
+        if (!needIdx || idxFlat.empty()) return 0;
+        size_t pos = r * 1 + c;
+        return (pos < idxFlat.size()) ? (idxFlat[pos] & 0xFF) : 0;
+    };
+
+    // Output: validRow x 256 elements of dstType
+    size_t dstCol = 256;
+    uint32_t eleSize = CubeCalculate::EleSize(dstType);
+    std::vector<uint64_t> dst(validRow * dstCol, 0);
+
+    for (size_t row = 0; row < validRow; ++row) {
+        uint32_t counts[256] = {0};
+
+        for (size_t col = 0; col < validCol; ++col) {
+            uint64_t value = src[row * validCol + col];
+
+            if (srcType == DataType::UINT16) {
+                uint32_t byte1 = (value >> 8) & 0xFF;
+                uint32_t byte0 = value & 0xFF;
+
+                if (byteId == 1) { // Byte1: MSB, no filter
+                    counts[byte1]++;
+                }
+                if (byteId == 0) { // Byte0: LSB, filter: byte1 == idx[row, 0]
+                    if (getIdxByte(row, 0) == byte1) {
+                        counts[byte0]++;
+                    }
+                }
+            } else if (srcType == DataType::UINT32) {
+                uint32_t byte3 = (value >> 24) & 0xFF;
+                uint32_t byte2 = (value >> 16) & 0xFF;
+                uint32_t byte1 = (value >> 8) & 0xFF;
+                uint32_t byte0 = value & 0xFF;
+
+                if (byteId == 3) { // Byte3: MSB, no filter
+                    counts[byte3]++;
+                }
+                if (byteId == 2) { // Byte2, filter: byte3 == idx[0, 0]
+                    if (getIdxByte(0, 0) == byte3) {
+                        counts[byte2]++;
+                    }
+                }
+                if (byteId == 1) { // Byte1, filter: byte3==idx[0,0] && byte2==idx[1,0]
+                    if (getIdxByte(0, 0) == byte3 && getIdxByte(1, 0) == byte2) {
+                        counts[byte1]++;
+                    }
+                }
+                if (byteId == 0) { // Byte0: filter byte3==idx[0,0] && byte2==idx[1,0] && byte1==idx[2,0]
+                    if (getIdxByte(0, 0) == byte3 && getIdxByte(1, 0) == byte2 && getIdxByte(2, 0) == byte1) {
+                        counts[byte0]++;
+                    }
+                }
+            }
+        }
+
+        // Prefix sum: dst[row][k] = cumulative count of values 0..k
+        uint64_t prefix = 0;
+        for (int k = 0; k < 256; ++k) {
+            prefix += counts[k];
+            dst[row * dstCol + k] = prefix;
+        }
+    }
+
+    if (verbose && LoggerManager::GetManager().level <= LoggerLevel::DETAIL) {
+        std::cout << "THISTOGRAM Src:" << std::endl;
+        CubeCalculate::PrintData(src, validRow, validCol);
+        std::cout << "THISTOGRAM Dst (prefix cumulative):" << std::endl;
+        CubeCalculate::PrintData(dst, validRow, dstCol);
+    }
+
+    // Store to dst tile register
+    uint32_t offset = 0;
+    for (size_t k = 0; k < dst.size(); ++k) {
+        threadStatus[block->threadId].archStatus.tileReg.Store(block->dstTile[0]->baseAddr, offset, eleSize, dst[k]);
+        offset += eleSize;
+    }
+}
+
 void SoftCore::ExecuteTCVT(BlockFuncPtr block,
                            std::pair<size_t, size_t> totalMatrix,
                            std::pair<size_t, size_t> validMatrix,
@@ -686,6 +798,11 @@ void SoftCore::ExecuteTEPL(BlockFuncPtr block)
             totalCol = (block->lb2 == 1) ? block->lb0 : block->lb2;
             totalRow = block->srcTile[0]->size / (totalCol * CubeCalculate::EleSize(dataType));
             ExecuteTCVT(block, {totalRow, totalCol}, {validRow, validCol}, dataType, dstType);
+            break;
+        case TileOp::THISTOGRAM:
+            validCol = block->lb0;
+            validRow = block->lb1;
+            ExecuteTHISTOGRAM(block, {validRow, validCol}, dataType, dstType, block->blockAttr->byteId);
             break;
         default:
             assert(false && "Such Tepl template is not currently supported");

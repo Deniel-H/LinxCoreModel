@@ -93,6 +93,7 @@
 %BlockType_7_11       7:5
 
 %dataType             27:5
+%byteId_19_18         18:2
 %mode                 25:2
 %mode_29              29:1
 %function             20:5
@@ -345,7 +346,8 @@
                                                                           src3=%canon src3Type=2 \
                                                                           src4=%S src4Type=2 \
                                                                           src5=%padValue_27_28 src5Type=2 \
-                                                                          src6=%CMode src6Type=2
+                                                                          src6=%CMode src6Type=2 \
+                                                                          src7=%byteId_19_18 src7Type=2
 @B_HINT_PREFETCH  ............ . .. . . ... ..... ... ... .   &InstInfo   isBinst=4 \
                                                                           src0=%Jump_Vld src0Type=2 \
                                                                           src1=%Jump_Flag src1Type=2 \
@@ -374,7 +376,7 @@ BSTART_COND          ......................... 010 000 1          @BSTART_BRANCH
 B_TEXT               ......................... 000 001 1          @B_TEXT
 
 B_CATR               00000 . 0 00000 . . . . . 000 00000 010 001 1 @B_CATR
-B_DATR               ... .. . . ..... 0 0 ... 001 ..... 010 001 1  @B_DATR
+B_DATR               ... .. . . ..... . . ... 001 ..... 010 001 1  @B_DATR
 
 B_DIM            ............ ........ ..... 100 001 1       @B_DIM
 

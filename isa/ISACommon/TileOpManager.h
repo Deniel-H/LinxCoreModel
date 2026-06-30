@@ -267,7 +267,7 @@ enum class ParFunctionTEPL {
     EXCEPTION__RESERVE_6,
     EXCEPTION__RESERVE_7,
     EXCEPTION__RESERVE_8,
-    EXCEPTION__RESERVE_9,
+    TEPL_THISTOGRAM,
     EXCEPTION__RESERVE_10,
     EXCEPTION__RESERVE_11,
     EXCEPTION__RESERVE_12,
@@ -400,6 +400,7 @@ enum class TileOp {
     TCOLEXPANDEXPDIF,
     ESAVE,
     ERCOV,
+    THISTOGRAM,
     /* TMA */
     TLOAD,
     TSTORE,
@@ -585,6 +586,8 @@ inline TileOp GetTeplTileOp(ParFunctionTEPL tepl)
             return TileOp::ESAVE;
         case ParFunctionTEPL::TEPL_ERCOV:
             return TileOp::ERCOV;
+        case ParFunctionTEPL::TEPL_THISTOGRAM:
+            return TileOp::THISTOGRAM;
         default:
             ASSERT(false && "Undefined TEPL TileOp function");
     }
