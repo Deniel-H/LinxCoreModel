@@ -6050,9 +6050,13 @@ void ReadFillBuffer::SendReadReq()
 
     uint32_t readSentCnt = 0;
     for (uint32_t i = 0; i < m_rfbQ.size(); ++i) {
-        uint64_t entryId = m_pendingReqFifo.front();
         RFBEntry& entry = m_rfbQ[i];
-        if (!entry.vld || entry.status != RFBEntryStatus::WAIT || i != entryId) {
+        if (!entry.vld || entry.status != RFBEntryStatus::WAIT) {
+            continue;
+        }
+
+        uint64_t entryId = m_pendingReqFifo.front();
+        if (i != entryId) {
             continue;
         }
 
