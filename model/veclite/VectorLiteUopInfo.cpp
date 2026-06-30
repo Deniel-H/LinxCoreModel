@@ -82,6 +82,7 @@ VectorLiteUopInfo::VectorLiteUopInfo()
         { TileOp::TCOLEXPANDEXPDIF, 6 },
         { TileOp::ESAVE, 4 },
         { TileOp::ERCOV, 4 },
+        { TileOp::THISTOGRAM, 6 },
     }),
     pipeTable({
         { TileOp::TADD, VectorLiteUopInfo::ExePipe::IALU },
@@ -157,6 +158,7 @@ VectorLiteUopInfo::VectorLiteUopInfo()
         { TileOp::TCOLEXPANDEXPDIF, VectorLiteUopInfo::ExePipe::IALU },
         { TileOp::ESAVE, VectorLiteUopInfo::ExePipe::IALU },
         { TileOp::ERCOV, VectorLiteUopInfo::ExePipe::IALU },
+        { TileOp::THISTOGRAM, VectorLiteUopInfo::ExePipe::IALU },
     })
 {}
 

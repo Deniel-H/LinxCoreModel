@@ -20,8 +20,8 @@ void IEXMDB::Build(double conf, bool enable)
 
 void IEXMDB::Reset()
 {
-    confEntry.clear();
-    confTable.clear();
+    confEntry = std::vector<SSITEntry>(IEXMDBSIZE);
+    confTable = std::vector<MDBTable>(MDBTABLESIZE);
 }
 
 void IEXMDB::Work() {

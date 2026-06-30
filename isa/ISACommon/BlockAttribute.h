@@ -62,6 +62,7 @@ public:
     CMode                                   cMode = CMode::INVALID;
     FRMMode                                 rMode = FRMMode::FRM_INV;
     DataType                                dataType = DataType::INVALID;
+    uint32_t                                byteId = 0;
     std::string Dump()
     {
         std::vector<std::string> parts;

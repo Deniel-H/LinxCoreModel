@@ -398,6 +398,9 @@ void Block::HandleBDATR(MInst &inst)
     blockAttr->saturation = static_cast<bool>(inst.srcs[SRC4_IDX]->data);
     blockAttr->padValue = static_cast<PadValue>(inst.srcs[SRC5_IDX]->data);
     blockAttr->cMode = static_cast<CMode>(inst.srcs[SRC6_IDX]->data);
+    if (inst.srcs.size() > 7) {
+        blockAttr->byteId = inst.srcs[SRC6_IDX + 1]->data;
+    }
     inst.SetAssembleStr(GetBAttrStr());
 }
 
