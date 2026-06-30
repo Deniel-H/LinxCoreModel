@@ -6055,6 +6055,9 @@ void ReadFillBuffer::SendReadReq()
             continue;
         }
 
+        if (m_pendingReqFifo.empty()) {
+            break;
+        }
         uint64_t entryId = m_pendingReqFifo.front();
         if (i != entryId) {
             continue;

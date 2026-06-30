@@ -571,6 +571,7 @@ void SoftCore::ExecuteTHISTOGRAM(BlockFuncPtr block,
         idxFlat = LoadFromTileRegister(DataType::UINT32, idxLoadRows, 1,
                                         block->srcTile[1]->baseAddr,
                                         FractalType::RD, block->threadId);
+        assert(idxFlat.size() >= idxLoadRows && "Index tile data size is smaller than expected");
     }
 
     // Pre-extract idx filter bytes for fast access
