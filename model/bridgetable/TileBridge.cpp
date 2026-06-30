@@ -3571,6 +3571,7 @@ bool BridgePairQ::SendOneWriteReq2WCB(BPQEntryPtr bpqEntry)
     wcbEntry.layout = bpqEntry->tileArg.layout;
     wcbEntry.op = bpqEntry->tileArg.op;
     wcbEntry.stid = bpqEntry->tileArg.stid;
+    wcbEntry.data.resize(MAX_TILE_DATA_BYTE);
 
     std::string wcbType;
     if (bpqEntry->direction == Direction::TR2GM) {
