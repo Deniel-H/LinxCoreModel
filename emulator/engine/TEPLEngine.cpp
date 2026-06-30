@@ -535,6 +535,17 @@ void SoftCore::ExecuteTHISTOGRAM(BlockFuncPtr block,
                                   DataType dstType,
                                   uint32_t byteId)
 {
+    // --- Defensive checks ---
+    assert(block != nullptr);
+    assert(block->srcTile.size() > 0 && block->srcTile[0] != nullptr);
+    assert(block->dstTile.size() > 0 && block->dstTile[0] != nullptr);
+    assert(srcType == DataType::UINT16 || srcType == DataType::UINT32);
+    if (srcType == DataType::UINT16) {
+        assert(byteId <= 1 && "THISTOGRAM UINT16: byteId must be 0 or 1");
+    } else { // UINT32
+        assert(byteId <= 3 && "THISTOGRAM UINT32: byteId must be 0..3");
+    }
+
     size_t validRow = validMatrix.first;
     size_t validCol = validMatrix.second;
 
@@ -553,6 +564,7 @@ void SoftCore::ExecuteTHISTOGRAM(BlockFuncPtr block,
     } else if (srcType == DataType::UINT32 && byteId == 3) {
         needIdx = false; // u32 Byte3: no filter
     }
+    assert(!needIdx || (block->srcTile.size() > 1 && block->srcTile[1] != nullptr));
     std::vector<uint64_t> idxFlat;
     if (needIdx && block->srcTile.size() > 1 && block->srcTile[1] != nullptr) {
         uint32_t idxLoadRows = (srcType == DataType::UINT16) ? validRow : 3;
